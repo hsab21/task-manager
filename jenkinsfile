@@ -1,0 +1,62 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE_NAME = "task-manager"
+        DOCKER_TAG = "latest"
+        SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner', type: 'Tool' // Le nom doit correspondre à votre configuration d'outil SonarQube Scanner dans Jenkins
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/hsab21/task-manager.git'
+            }
+        }
+
+        stage('Build and SonarQube Analysis') {
+            steps {
+                script {
+                    // Exécuter l'analyse SonarQube
+                    withSonarQubeEnv('SonarQube') {
+                        sh "mvn clean install sonar:sonar"
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_TAG} ."
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    sh 'docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}'
+                    sh "docker push ${DOCKER_IMAGE_NAME}:${DOCKER_TAG}"
+                }
+            }
+        }
+
+        stage('Deploy with Ansible') {
+            steps {
+                script {
+                    sh 'ansible-playbook -i inventory/hosts deploy.yml'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline exécuté avec succès.'
+        }
+        failure {
+            echo 'Le pipeline a échoué.'
+        }
+    }
+}
