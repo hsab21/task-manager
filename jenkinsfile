@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE_NAME = "task-manager"
         DOCKER_TAG = "latest"
-        SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner', type: 'Tool' // Le nom doit correspondre à votre configuration d'outil SonarQube Scanner dans Jenkins
+        SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner', type: 'Tool' 
     }
 
     stages {
